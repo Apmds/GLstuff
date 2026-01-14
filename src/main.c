@@ -1,12 +1,16 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include <stdio.h>
+#include <stdbool.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
 // Called when the window size changes (changes the openGL framebuffer to match the new framebuffer size)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+// Processes the key input for the given window
+void process_input(GLFWwindow* window);
 
 int main() {
     glfwInit();
@@ -46,6 +50,8 @@ int main() {
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        process_input(window);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -57,4 +63,10 @@ int main() {
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void process_input(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
 }
