@@ -12,6 +12,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // Processes the key input for the given window
 void process_input(GLFWwindow* window);
 
+float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.5f, 0.0f,
+     0.0f,  0.0f, 0.0f,
+};
+
 int main() {
     glfwInit();
     
@@ -46,6 +52,15 @@ int main() {
 
     // Create the actual openGL viewport with the dimensions of the window
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+
+    // Criar buffer na gpu e meter como array buffer
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Enviar os vertices do triangulo para a gpu como memória estática (write once, read many)
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 
     // Render loop
