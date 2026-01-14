@@ -18,6 +18,10 @@ float vertices[] = {
      0.0f,  0.0f, 0.0f,
 };
 
+// Helpers para carregar e compilar um shader
+unsigned int loadShader(GLenum shader_type, const char* shader_code);
+bool compileShader(unsigned int shader);
+
 const char* vertex_shader_code = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main() {\n"
@@ -31,29 +35,6 @@ const char* fragment_shader_code = "#version 330 core\n"
     "FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
     "}\n"
 ;
-
-unsigned int loadShader(GLenum shader_type, const char* shader_code) {
-    unsigned int shader = glCreateShader(shader_type);
-
-    glShaderSource(shader, 1, &shader_code, NULL);
-    
-    return shader;
-}
-
-bool compileShader(unsigned int shader) {
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog);
-        printf("%s\n", infoLog);
-        return false;
-    }
-
-    return true;
-}
 
 int main() {
     glfwInit();
@@ -99,6 +80,7 @@ int main() {
     // Enviar os vertices do triangulo para a gpu como memória estática (write once, read many)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // Shaders básicos
     unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, vertex_shader_code);
     if (!compileShader(vertex_shader)) {
         return -1;
@@ -108,6 +90,25 @@ int main() {
     if (!compileShader(fragment_shader)) {
         return -1;
     }
+
+    // Linkar shaders num program
+    unsigned int shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
+
+    int success;
+    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+    if(!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(shader_program, sizeof(infoLog), NULL, infoLog);
+        printf("%s\n", infoLog);
+        return -1;
+    }
+
+    // Pode-se apagar os shaders depois de linkar
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -133,4 +134,27 @@ void process_input(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+}
+
+unsigned int loadShader(GLenum shader_type, const char* shader_code) {
+    unsigned int shader = glCreateShader(shader_type);
+
+    glShaderSource(shader, 1, &shader_code, NULL);
+    
+    return shader;
+}
+
+bool compileShader(unsigned int shader) {
+    glCompileShader(shader);
+
+    int success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog);
+        printf("%s\n", infoLog);
+        return false;
+    }
+
+    return true;
 }
