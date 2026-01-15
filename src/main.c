@@ -15,7 +15,7 @@ void process_input(GLFWwindow* window);
 float vertices[] = {
     -0.5f, -0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
-     0.0f,  0.0f, 0.0f,
+     0.0f,  0.5f, 0.0f,
 };
 
 // Helpers para carregar e compilar um shader
@@ -25,14 +25,14 @@ bool compileShader(unsigned int shader);
 const char* vertex_shader_code = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main() {\n"
-    "gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\n"
 ;
 
 const char* fragment_shader_code = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main() {\n"
-    "FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
     "}\n"
 ;
 
@@ -71,22 +71,13 @@ int main() {
     // Create the actual openGL viewport with the dimensions of the window
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-
-    // Criar buffer na gpu e meter como array buffer
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // Enviar os vertices do triangulo para a gpu como memória estática (write once, read many)
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     // Shaders básicos
     unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, vertex_shader_code);
     if (!compileShader(vertex_shader)) {
         return -1;
     }
 
-    unsigned int fragment_shader = loadShader(GL_VERTEX_SHADER, fragment_shader_code);
+    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, fragment_shader_code);
     if (!compileShader(fragment_shader)) {
         return -1;
     }
@@ -109,6 +100,27 @@ int main() {
     // Pode-se apagar os shaders depois de linkar
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
+    
+    // Criar vertex buffer na gpu e meter como array buffer
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Criar vertex array para guardar o vertex buffer e as configurações de atributos
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    
+    // Enviar os vertices do triangulo para a gpu como memória estática (write once, read many)
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Colocar atributos de vertice no buffer object
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // 3 floats
+    glEnableVertexAttribArray(0);
+
+    // Unbind da VAO (não seria preciso aqui especificamente porque não damos setup a mais nenhum vertex array)
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Dei unbind ao vertex buffer também só para mostrar que VBO está associado a VAO agora
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -116,6 +128,12 @@ int main() {
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Desenhar o triângulo guardado na VAO
+        glUseProgram(shader_program);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
