@@ -13,10 +13,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f,  0.5f, 0.0f,
-    -0.5f,  0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
+     0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+     0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
 };
 
 unsigned int indices[] = {
@@ -32,15 +32,19 @@ bool compileShader(unsigned int shader);
 
 const char* vertex_shader_code = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "in vec3 color;\n"
+    "out vec3 Color;\n"
     "void main() {\n"
+    "   Color = color;\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\n"
 ;
 
 const char* fragment_shader_code = "#version 330 core\n"
+    "in vec3 Color;\n"
     "out vec4 FragColor;\n"
     "void main() {\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = vec4(Color, 1.0f);\n"
     "}\n"
 ;
 
@@ -124,8 +128,13 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // Colocar atributos de vertice no buffer object
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // 3 floats
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0); // 3 floats
+
+    // Dá para fazer também desta forma quando sabemos o shader que vamos usar com estes vértices
+    unsigned int element_attr = glGetAttribLocation(shader_program, "color");
+    glEnableVertexAttribArray(element_attr);
+    glVertexAttribPointer(element_attr, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float))); // 3 floats
 
     // Criar um EBO para guardar os indices dos vértices a desenhar
     unsigned int EBO;
