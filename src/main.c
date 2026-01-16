@@ -1,16 +1,11 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdbool.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-
-// Called when the window size changes (changes the openGL framebuffer to match the new framebuffer size)
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
-// Processes the key input for the given window
-void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 float vertices[] = {
     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
@@ -26,27 +21,25 @@ unsigned int indices[] = {
 
 bool wireframe = false;
 
-// Helpers para carregar e compilar um shader
-unsigned int loadShader(GLenum shader_type, const char* shader_code);
-bool compileShader(unsigned int shader);
+// Called when the window size changes (changes the openGL framebuffer to match the new framebuffer size)
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
 
-const char* vertex_shader_code = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "in vec3 color;\n"
-    "out vec3 Color;\n"
-    "void main() {\n"
-    "   Color = color;\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\n"
-;
-
-const char* fragment_shader_code = "#version 330 core\n"
-    "in vec3 Color;\n"
-    "out vec4 FragColor;\n"
-    "void main() {\n"
-    "   FragColor = vec4(Color, 1.0f);\n"
-    "}\n"
-;
+// Processes the key input for the given window
+void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        if (!wireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        wireframe = !wireframe;
+    }
+}
 
 int main() {
     glfwInit();
@@ -85,12 +78,12 @@ int main() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Shaders básicos
-    unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, vertex_shader_code);
+    unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, "shaders/vertex.vert");
     if (!compileShader(vertex_shader)) {
         return -1;
     }
 
-    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, fragment_shader_code);
+    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, "shaders/fragment.frag");
     if (!compileShader(fragment_shader)) {
         return -1;
     }
@@ -166,46 +159,4 @@ int main() {
 
     glfwTerminate();
     return 0;
-}
-
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-        if (!wireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-        wireframe = !wireframe;
-    }
-}
-
-unsigned int loadShader(GLenum shader_type, const char* shader_code) {
-    unsigned int shader = glCreateShader(shader_type);
-
-    glShaderSource(shader, 1, &shader_code, NULL);
-    
-    return shader;
-}
-
-bool compileShader(unsigned int shader) {
-    glCompileShader(shader);
-
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog);
-        printf("%s\n", infoLog);
-        return false;
-    }
-
-    return true;
 }

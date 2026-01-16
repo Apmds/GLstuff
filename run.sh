@@ -3,6 +3,4 @@
 mkdir -p build
 cd build
 cmake ..
-make
-./MyProgram
-cd ..
+make && cd .. && ./build/opengl

@@ -26,6 +26,7 @@ target_sources(opengl
     PRIVATE
         src/main.c
         src/glad.c
+        src/utils.c
 )
 
 # Link the stuff within GLFW
