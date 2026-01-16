@@ -10,13 +10,21 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // Processes the key input for the given window
-void process_input(GLFWwindow* window);
+void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 float vertices[] = {
     -0.5f, -0.5f, 0.0f,
+     0.5f,  0.5f, 0.0f,
+    -0.5f,  0.5f, 0.0f,
      0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f,
 };
+
+unsigned int indices[] = {
+    0, 1, 2,
+    0, 1, 3,
+};
+
+bool wireframe = false;
 
 // Helpers para carregar e compilar um shader
 unsigned int loadShader(GLenum shader_type, const char* shader_code);
@@ -61,6 +69,7 @@ int main() {
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, process_input_key);
 
     // Pedir ao GLAD para carregar as funções do OpenGL (passamos a função do GLFW que faz isso baseado no sistema operativo)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -118,21 +127,28 @@ int main() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // 3 floats
     glEnableVertexAttribArray(0);
 
+    // Criar um EBO para guardar os indices dos vértices a desenhar
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    
     // Unbind da VAO (não seria preciso aqui especificamente porque não damos setup a mais nenhum vertex array)
     glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // Dei unbind ao vertex buffer também só para mostrar que VBO está associado a VAO agora
+
+    // Dei unbind do vertex e element buffers também só para mostrar que VBO e EBO estão associados a VAO agora
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
-        process_input(window);
-
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Desenhar o triângulo guardado na VAO
+        // Desenhar o quadrado guardado na VAO
         glUseProgram(shader_program);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
@@ -148,9 +164,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void process_input(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        if (!wireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        wireframe = !wireframe;
     }
 }
 
