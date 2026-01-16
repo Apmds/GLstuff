@@ -15,14 +15,14 @@ set_target_properties(glfw PROPERTIES
 )
 
 # Executável
-add_executable(MyProgram)
+add_executable(opengl)
 
-target_include_directories(MyProgram
+target_include_directories(opengl
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
 )
 
-target_sources(MyProgram
+target_sources(opengl
     PRIVATE
         src/main.c
         src/glad.c
@@ -41,7 +41,7 @@ target_link_libraries(glfw
 )
 
 # Link GLFW
-target_link_libraries(MyProgram
+target_link_libraries(opengl
     PRIVATE
         glfw
 )
