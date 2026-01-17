@@ -90,8 +90,8 @@ int main() {
         return -1;
     }
 
-    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, "shaders/rainbow.frag");
-    if (!compileShader(fragment_shader)) {
+    unsigned int rainbow_fragment = loadShader(GL_FRAGMENT_SHADER, "shaders/rainbow.frag");
+    if (!compileShader(rainbow_fragment)) {
         return -1;
     }
 
@@ -100,30 +100,20 @@ int main() {
         return -1;
     }
 
-    // Linkar shaders num program
-    unsigned int rainbow_shader = glCreateProgram();
-    glAttachShader(rainbow_shader, vertex_shader);
-    glAttachShader(rainbow_shader, fragment_shader);
-    glLinkProgram(rainbow_shader);
+    
+    unsigned int rainbow_shader;
+    if (!makeShaderProgram(&rainbow_shader, vertex_shader, rainbow_fragment)) {
+        return -1;
+    }
 
-    int success;
-    glGetProgramiv(rainbow_shader, GL_LINK_STATUS, &success);
-    if(!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(rainbow_shader, sizeof(infoLog), NULL, infoLog);
-        printf("%s\n", infoLog);
+    unsigned int yellow_shader;
+    if (!makeShaderProgram(&yellow_shader, vertex_shader, yellow_fragment)) {
         return -1;
     }
 
     // Pode-se apagar os shaders depois de linkar se não forem mais usados
-    glDeleteShader(fragment_shader);
-    
-    unsigned int yellow_shader = glCreateProgram();
-    glAttachShader(yellow_shader, vertex_shader);
-    glAttachShader(yellow_shader, yellow_fragment);
-    glLinkProgram(yellow_shader);
-    
     glDeleteShader(vertex_shader);
+    glDeleteShader(rainbow_fragment);
     glDeleteShader(yellow_fragment);
 
     // Criar vertex buffer na gpu e meter como array buffer

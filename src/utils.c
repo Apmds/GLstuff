@@ -51,3 +51,20 @@ bool compileShader(unsigned int shader) {
     return true;
 }
 
+// Criar program e linkar shaders nele
+bool makeShaderProgram(unsigned int* progp, unsigned int vertex_shader, unsigned int fragment_shader) {
+    *progp = glCreateProgram();
+    unsigned int prog = *progp;
+    glAttachShader(prog, vertex_shader);
+    glAttachShader(prog, fragment_shader);
+    glLinkProgram(prog);
+
+    int success;
+    glGetProgramiv(prog, GL_LINK_STATUS, &success);
+    if(!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(prog, sizeof(infoLog), NULL, infoLog);
+        printf("%s\n", infoLog);
+        return -1;
+    }
+}
