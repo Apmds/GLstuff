@@ -100,7 +100,7 @@ int main() {
         return -1;
     }
 
-    
+    // Shader programs    
     unsigned int rainbow_shader;
     if (!makeShaderProgram(&rainbow_shader, vertex_shader, rainbow_fragment)) {
         return -1;
