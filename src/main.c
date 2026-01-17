@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -180,6 +181,10 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    // Definir blend mode para transparência
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -193,6 +198,13 @@ int main() {
 
         // Triangulo pequeno
         glUseProgram(yellow_shader);
+        
+        // Atualizar uniform (o valor fica guardado por default no programa então poderíamos não atualizar todos os frames)
+        float time = glfwGetTime();
+        float transparency = (sin(time) / 2) + 0.5;
+        unsigned int transparency_loc = glGetUniformLocation(yellow_shader, "transparency");
+        glUniform1f(transparency_loc, transparency);
+        
         glBindVertexArray(yellow_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
