@@ -8,10 +8,16 @@
 #define WINDOW_HEIGHT 600
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
-     0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-    -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-     0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f,
+    -0.7f, -0.7f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
+     0.3f,  0.3f, 0.0f, 0.0f, 1.0f, 0.0f,
+    -0.7f,  0.3f, 0.0f, 0.0f, 0.0f, 1.0f,
+     0.3f, -0.7f, 0.0f, 1.0f, 1.0f, 1.0f,
+};
+
+float vertices2[] = {
+     -0.9f,  0.9f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
+     -0.9f,  0.8f, 0.0f, 0.0f, 1.0f, 0.0f,
+     -0.85f, 0.85f, 0.0f, 0.0f, 0.0f, 1.0f,
 };
 
 unsigned int indices[] = {
@@ -83,30 +89,42 @@ int main() {
         return -1;
     }
 
-    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, "shaders/fragment.frag");
+    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, "shaders/rainbow.frag");
     if (!compileShader(fragment_shader)) {
         return -1;
     }
 
+    unsigned int yellow_fragment = loadShader(GL_FRAGMENT_SHADER, "shaders/yellow.frag");
+    if (!compileShader(yellow_fragment)) {
+        return -1;
+    }
+
     // Linkar shaders num program
-    unsigned int shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
+    unsigned int rainbow_shader = glCreateProgram();
+    glAttachShader(rainbow_shader, vertex_shader);
+    glAttachShader(rainbow_shader, fragment_shader);
+    glLinkProgram(rainbow_shader);
 
     int success;
-    glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+    glGetProgramiv(rainbow_shader, GL_LINK_STATUS, &success);
     if(!success) {
         char infoLog[512];
-        glGetProgramInfoLog(shader_program, sizeof(infoLog), NULL, infoLog);
+        glGetProgramInfoLog(rainbow_shader, sizeof(infoLog), NULL, infoLog);
         printf("%s\n", infoLog);
         return -1;
     }
 
-    // Pode-se apagar os shaders depois de linkar
-    glDeleteShader(vertex_shader);
+    // Pode-se apagar os shaders depois de linkar se não forem mais usados
     glDeleteShader(fragment_shader);
     
+    unsigned int yellow_shader = glCreateProgram();
+    glAttachShader(yellow_shader, vertex_shader);
+    glAttachShader(yellow_shader, yellow_fragment);
+    glLinkProgram(yellow_shader);
+    
+    glDeleteShader(vertex_shader);
+    glDeleteShader(yellow_fragment);
+
     // Criar vertex buffer na gpu e meter como array buffer
     unsigned int VBO;
     glGenBuffers(1, &VBO);
@@ -125,7 +143,7 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0); // 3 floats
 
     // Dá para fazer também desta forma quando sabemos o shader que vamos usar com estes vértices
-    unsigned int element_attr = glGetAttribLocation(shader_program, "color");
+    unsigned int element_attr = glGetAttribLocation(rainbow_shader, "color");
     glEnableVertexAttribArray(element_attr);
     glVertexAttribPointer(element_attr, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float))); // 3 floats
 
@@ -137,10 +155,30 @@ int main() {
     
     // Unbind da VAO (não seria preciso aqui especificamente porque não damos setup a mais nenhum vertex array)
     glBindVertexArray(0);
-
+    
     // Dei unbind do vertex e element buffers também só para mostrar que VBO e EBO estão associados a VAO agora
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    unsigned int yellow_VBO;
+    glGenBuffers(1, &yellow_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, yellow_VBO);
+    
+    unsigned int yellow_VAO;
+    glGenVertexArrays(1, &yellow_VAO);
+    glBindVertexArray(yellow_VAO);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), 0);
+
+    element_attr = glGetAttribLocation(yellow_shader, "color");
+    glEnableVertexAttribArray(element_attr);
+    glVertexAttribPointer(element_attr, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -148,9 +186,15 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Desenhar o quadrado guardado na VAO
-        glUseProgram(shader_program);
+        glUseProgram(rainbow_shader);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        // Triangulo pequeno
+        glUseProgram(yellow_shader);
+        glBindVertexArray(yellow_VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
