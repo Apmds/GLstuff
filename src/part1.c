@@ -1,3 +1,7 @@
+/*
+This part includes the subsections from "OpenGL" to "Shaders" in the "Getting Started" section from learnopengl.com
+*/
+
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "utils.h"
@@ -64,7 +68,7 @@ int main() {
     #endif
 
     // Create window and set context
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL - Part 1", NULL, NULL);
     if (window == NULL) {
         printf("Failed to create GLFW window\n");
         glfwTerminate();
