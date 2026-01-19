@@ -42,9 +42,12 @@ static bool compileShader(unsigned int shader) {
     int success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
+        int shaderType;
+        glGetShaderiv(shader, GL_SHADER_TYPE, &shaderType);
+
         char infoLog[512];
         glGetShaderInfoLog(shader, sizeof(infoLog), NULL, infoLog);
-        printf("%s\n", infoLog);
+        printf("Error compiling %s shader: %s\n", shaderType == GL_FRAGMENT_SHADER ? "fragment" : "vertex", infoLog);
         return false;
     }
 
@@ -74,7 +77,7 @@ bool makeShaderProgram(unsigned int* progp, const char* vertex_code, const char*
     if(!success) {
         char infoLog[512];
         glGetProgramInfoLog(prog, sizeof(infoLog), NULL, infoLog);
-        printf("%s\n", infoLog);
+        printf("Error linking shaders: %s\n", infoLog);
         return false;
     }
 

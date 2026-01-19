@@ -5,9 +5,9 @@ in vec3 color;
 
 uniform float horizontalShift;
 
-out vec3 Color;
+out vec3 outPosition;
 
 void main() {
-   Color = color;
-   gl_Position = vec4(aPos.x + horizontalShift, -aPos.y, aPos.z, 1.0);
+   outPosition = vec3(aPos.x + horizontalShift, aPos.y, aPos.z);
+   gl_Position = vec4(outPosition, 1.0);
 }
