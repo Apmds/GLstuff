@@ -5,11 +5,14 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 
-// Helpers para carregar e compilar um shader
-unsigned int loadShader(GLenum shader_type, const char* file_name);
-bool compileShader(unsigned int shader);
+#define shaderSet(shader, uniform, val) _Generic( (val), float: shaderSetFloat, int: shaderSetInt, unsigned int: shaderSetUint, bool: shaderSetBool) (shader, uniform, val)
 
 // Criar program e linkar shaders nele
-bool makeShaderProgram(unsigned int* progp, unsigned int vertex_shader, unsigned int fragment_shader);
+bool makeShaderProgram(unsigned int* progp, const char* vertex_code, const char* fragment_code);
+
+void shaderSetFloat(unsigned int shader, const char* uniform, float val);
+void shaderSetInt(unsigned int shader, const char* uniform, int val);
+void shaderSetUint(unsigned int shader, const char* uniform, unsigned int val);
+void shaderSetBool(unsigned int shader, const char* uniform, bool val);
 
 #endif

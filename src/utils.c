@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 // Helpers para carregar e compilar um shader
-unsigned int loadShader(GLenum shader_type, const char* file_name) {
+static unsigned int loadShader(GLenum shader_type, const char* file_name) {
     FILE* file = fopen(file_name, "r");
     if (file == NULL) {
         fprintf(stderr, "File \"%s\" not found!\n", file_name);
@@ -36,7 +36,7 @@ unsigned int loadShader(GLenum shader_type, const char* file_name) {
     return shader;
 }
 
-bool compileShader(unsigned int shader) {
+static bool compileShader(unsigned int shader) {
     glCompileShader(shader);
 
     int success;
@@ -52,7 +52,17 @@ bool compileShader(unsigned int shader) {
 }
 
 // Criar program e linkar shaders nele
-bool makeShaderProgram(unsigned int* progp, unsigned int vertex_shader, unsigned int fragment_shader) {
+bool makeShaderProgram(unsigned int* progp, const char* vertex_code, const char* fragment_code) {
+    unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, vertex_code);
+    if (!compileShader(vertex_shader)) {
+        return false;
+    }
+
+    unsigned int fragment_shader = loadShader(GL_FRAGMENT_SHADER, fragment_code);
+    if (!compileShader(fragment_shader)) {
+        return false;
+    }
+
     *progp = glCreateProgram();
     unsigned int prog = *progp;
     glAttachShader(prog, vertex_shader);
@@ -65,6 +75,32 @@ bool makeShaderProgram(unsigned int* progp, unsigned int vertex_shader, unsigned
         char infoLog[512];
         glGetProgramInfoLog(prog, sizeof(infoLog), NULL, infoLog);
         printf("%s\n", infoLog);
-        return -1;
+        return false;
     }
+
+    // Pode-se apagar os shaders depois de linkar se não forem mais usados
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    return true;
+}
+
+void shaderSetFloat(unsigned int shader, const char* uniform, float val) {
+    unsigned int loc = glGetUniformLocation(shader, uniform);
+    glUniform1f(loc, val);
+}
+
+void shaderSetInt(unsigned int shader, const char* uniform, int val) {
+    unsigned int loc = glGetUniformLocation(shader, uniform);
+    glUniform1i(loc, val);
+}
+
+void shaderSetUint(unsigned int shader, const char* uniform, unsigned int val) {
+    unsigned int loc = glGetUniformLocation(shader, uniform);
+    glUniform1ui(loc, val);
+}
+
+void shaderSetBool(unsigned int shader, const char* uniform, bool val) {
+    unsigned int loc = glGetUniformLocation(shader, uniform);
+    glUniform1i(loc, val);
 }

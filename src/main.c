@@ -84,37 +84,16 @@ int main() {
     // Create the actual openGL viewport with the dimensions of the window
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    // Shaders básicos
-    unsigned int vertex_shader = loadShader(GL_VERTEX_SHADER, "shaders/vertex.vert");
-    if (!compileShader(vertex_shader)) {
-        return -1;
-    }
-
-    unsigned int rainbow_fragment = loadShader(GL_FRAGMENT_SHADER, "shaders/rainbow.frag");
-    if (!compileShader(rainbow_fragment)) {
-        return -1;
-    }
-
-    unsigned int yellow_fragment = loadShader(GL_FRAGMENT_SHADER, "shaders/yellow.frag");
-    if (!compileShader(yellow_fragment)) {
-        return -1;
-    }
-
     // Shader programs    
     unsigned int rainbow_shader;
-    if (!makeShaderProgram(&rainbow_shader, vertex_shader, rainbow_fragment)) {
+    if (!makeShaderProgram(&rainbow_shader, "shaders/rainbow.vert", "shaders/rainbow.frag")) {
         return -1;
     }
 
     unsigned int yellow_shader;
-    if (!makeShaderProgram(&yellow_shader, vertex_shader, yellow_fragment)) {
+    if (!makeShaderProgram(&yellow_shader, "shaders/yellow.vert", "shaders/yellow.frag")) {
         return -1;
     }
-
-    // Pode-se apagar os shaders depois de linkar se não forem mais usados
-    glDeleteShader(vertex_shader);
-    glDeleteShader(rainbow_fragment);
-    glDeleteShader(yellow_fragment);
 
     // Criar vertex buffer na gpu e meter como array buffer
     unsigned int VBO;
@@ -192,8 +171,8 @@ int main() {
         // Atualizar uniform (o valor fica guardado por default no programa então poderíamos não atualizar todos os frames)
         float time = glfwGetTime();
         float transparency = (sin(time) / 2) + 0.5;
-        unsigned int transparency_loc = glGetUniformLocation(yellow_shader, "transparency");
-        glUniform1f(transparency_loc, transparency);
+        
+        shaderSet(yellow_shader, "transparency", transparency);
         
         glBindVertexArray(yellow_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
