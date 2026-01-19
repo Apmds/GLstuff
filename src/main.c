@@ -173,6 +173,7 @@ int main() {
         float transparency = (sin(time) / 2) + 0.5;
         
         shaderSet(yellow_shader, "transparency", transparency);
+        shaderSet(yellow_shader, "horizontalShift", (float) (time*0.1));
         
         glBindVertexArray(yellow_VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
