@@ -6,6 +6,17 @@ project(LearnOpenGL C)
 add_library(glfw STATIC IMPORTED)
 set(GLFW_DIR "${CMAKE_SOURCE_DIR}/external/glfw")
 
+add_library(glad)
+set(GLAD_DIR "${CMAKE_SOURCE_DIR}/external/glad")
+
+target_sources(glad
+    PRIVATE
+        ${GLAD_DIR}/src/glad.c
+)
+target_include_directories(glad
+    PUBLIC
+        ${GLAD_DIR}/include
+)
 
 set_target_properties(glfw PROPERTIES
     IMPORTED_LOCATION
@@ -30,13 +41,11 @@ target_include_directories(part2
 target_sources(part1
     PRIVATE
         src/part1.c
-        src/glad.c
         src/utils.c
 )
 target_sources(part2
     PRIVATE
         src/part2.c
-        src/glad.c
         src/utils.c
 )
 
@@ -52,12 +61,14 @@ target_link_libraries(glfw
         dl
 )
 
-# Link GLFW
+# Link GLFW and GLAD
 target_link_libraries(part1
     PRIVATE
         glfw
+        glad
 )
 target_link_libraries(part2
     PRIVATE
         glfw
+        glad
 )
