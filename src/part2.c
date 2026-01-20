@@ -103,6 +103,7 @@ int main() {
 
     glBindVertexArray(0);
 
+    stbi_set_flip_vertically_on_load(true);
     int width, height, nrChannels;
     unsigned char *data = stbi_load("textures/container.png", &width, &height, &nrChannels, 0);
     if (data == NULL) {
@@ -112,9 +113,9 @@ int main() {
     }
 
     // Generate texture and bind it
-    uint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
+    uint tex_container;
+    glGenTextures(1, &tex_container);
+    glBindTexture(GL_TEXTURE_2D, tex_container);
 
     // Set filters and wrapping parameters (this can be done before loading the image data) (there exist default values already, but we need to set some when using mipmaps)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // Filter when zooming out
@@ -127,8 +128,34 @@ int main() {
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(data); // Texture is loaded so no need for this anymore
-
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind because I can
+
+    data = stbi_load("textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    if (data == NULL) {
+        fprintf(stderr, "Failed to load \"%s\"\n", "textures/awesomeface.png");
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    uint tex_face;
+    glGenTextures(1, &tex_face);
+    glBindTexture(GL_TEXTURE_2D, tex_face);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Por as localizações das coisas no shader
+    glUseProgram(shader);
+    glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
+    glUniform1i(glGetUniformLocation(shader, "texture2"), 1);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -137,7 +164,10 @@ int main() {
 
         glUseProgram(shader);
         glBindVertexArray(VAO);
-        glBindTexture(GL_TEXTURE_2D, tex);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex_container);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex_face);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
