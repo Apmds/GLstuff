@@ -4,6 +4,8 @@ These are some experiments I'm making to learn [OpenGL](https://www.opengl.org/)
 
 These are using OpenGL (obviously) and [GLFW](https://www.glfw.org/) to abstract OS-specific funcionality (creating window, loading OpenGL functions, getting input...) and [GLAD](https://glad.dav1d.de/) for setting OpenGL function pointers.
 
+There exist multiple parts, each one having their respective `src/partX.c` file and `build/partX` executable. Each part details the sections it covers on the top comment of the C file.
+
 ## Screenshots
 
 ![square](media/screenshot.png)
@@ -13,27 +15,29 @@ These are using OpenGL (obviously) and [GLFW](https://www.glfw.org/) to abstract
 `
 mkdir build && cd build
 cmake ..
-make
+make partX
 `
 
 or
 
 `
-./run.sh
+./run.sh partX
 `
 ## Running
 
 `
-./build/opengl
+./build/partX
 `
 
 or
 
 `
-./run.sh
+./run.sh partX
 `
 
 ## Controls
+
+Not all parts have these controls because I didn't bother to add them. Only the *quit* keybind is present in all parts.
 
 - **esc**: quit
 - **space**: switch between fill and wireframe modes
