@@ -2,6 +2,16 @@ cmake_minimum_required(VERSION 3.4...3.28 FATAL_ERROR) # Para ser igual ao do GL
 
 project(LearnOpenGL C)
 
+# Fetch stb_image.h
+include(FetchContent)
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(stb)
+
 # Biblioteca do glfw
 add_library(glfw STATIC IMPORTED)
 set(GLFW_DIR "${CMAKE_SOURCE_DIR}/external/glfw")
@@ -36,6 +46,7 @@ target_include_directories(part1
 target_include_directories(part2
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
+        ${stb_SOURCE_DIR}
 )
 
 target_sources(part1
