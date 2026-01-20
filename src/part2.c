@@ -5,6 +5,10 @@ This part includes the subsections from "Textures" to "somewhere I'll decide whe
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "utils.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -15,13 +19,15 @@ typedef unsigned int uint;
 #define WINDOW_HEIGHT 600
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B
-     0.0f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-     0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B, S, T
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
 uint indices[] = {
     0, 1, 2,
+    0, 2, 3,
 };
 
 // Called when the window size changes (changes the openGL framebuffer to match the new framebuffer size)
@@ -68,7 +74,8 @@ int main() {
     uint shader;
     bool success = makeShaderProgram(&shader, "shaders/texture.vert", "shaders/texture.frag");
     if (!success) {
-        return -1;
+        glfwTerminate();
+        return EXIT_FAILURE;
     }
 
     // Buffers and stuff
@@ -87,12 +94,41 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), 0); // vertPos
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), 0); // vertPos
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float))); // vertColor
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*) (3*sizeof(float))); // vertColor
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*) (6*sizeof(float))); // texCoords
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("textures/container.png", &width, &height, &nrChannels, 0);
+    if (data == NULL) {
+        fprintf(stderr, "Failed to load \"%s\"\n", "textures/container.png");
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    // Generate texture and bind it
+    uint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    // Set filters and wrapping parameters (this can be done before loading the image data) (there exist default values already, but we need to set some when using mipmaps)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // Filter when zooming out
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Filter when zooming in
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // X axis wrap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Y axis wrap
+
+    // Put data in texture and generate mipmaps
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data); // Texture is loaded so no need for this anymore
+
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind because I can
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -101,10 +137,12 @@ int main() {
 
         glUseProgram(shader);
         glBindVertexArray(VAO);
+        glBindTexture(GL_TEXTURE_2D, tex);
 
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
         glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
