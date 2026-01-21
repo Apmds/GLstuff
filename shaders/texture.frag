@@ -5,9 +5,12 @@ in vec2 texOutCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D texture1; // The texture
-uniform sampler2D texture2; // The texture
+uniform sampler2D texture1; // The texture for the container
+uniform sampler2D texture2; // The texture for the face
+uniform float mixValue;
 
 void main() {
-    fragColor = mix(texture(texture1, texOutCoords), texture(texture2, texOutCoords), 0.2) /** vec4(vertOutColor, 1.0)*/;
+    vec4 contColor = texture(texture1, texOutCoords);
+    vec4 faceColor = texture(texture2, vec2(-texOutCoords.x, texOutCoords.y));
+    fragColor = mix(contColor, faceColor, mixValue) /** vec4(vertOutColor, 1.0)*/;
 }

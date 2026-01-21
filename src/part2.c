@@ -20,9 +20,9 @@ typedef unsigned int uint;
 
 float vertices[] = {
     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B, S, T
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f,
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f,
 };
 
 uint indices[] = {
@@ -120,8 +120,8 @@ int main() {
     // Set filters and wrapping parameters (this can be done before loading the image data) (there exist default values already, but we need to set some when using mipmaps)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // Filter when zooming out
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Filter when zooming in
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // X axis wrap
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Y axis wrap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // X axis wrap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Y axis wrap
 
     // Put data in texture and generate mipmaps
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -152,22 +152,37 @@ int main() {
     stbi_image_free(data);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Por as localizações das coisas no shader
+    // Por as localizações dos samplers das texturas no shader
     glUseProgram(shader);
     glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
     glUniform1i(glGetUniformLocation(shader, "texture2"), 1);
 
     // Render loop
+    float mix = 0.2;
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.39, 0.58, 0.93, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader);
         glBindVertexArray(VAO);
+
+        // Definir as texturas baseado nas localizações dos uniformes
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex_container);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex_face);
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            mix += 0.01;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            mix -= 0.01;
+        }
+        if (mix > 1) mix = 1;
+        if (mix < 0) mix = 0;
+
+        
+        glUniform1f(glGetUniformLocation(shader, "mixValue"), mix);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
