@@ -161,17 +161,6 @@ int main() {
     glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
     glUniform1i(glGetUniformLocation(shader, "texture2"), 1);
 
-    // Cool translation stuff
-    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-    glm::mat4 trans = glm::mat4(1.0f); // Init matrix as identity, then apply the transformations to it
-    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
-
-    vec = trans*vec;
-
-    int trans_loc = glGetUniformLocation(shader, "transform");
-    glUniformMatrix4fv(trans_loc, 1, GL_FALSE, glm::value_ptr(trans));
-
     // Render loop
     float mix = 0.2;
     while (!glfwWindowShouldClose(window)) {
@@ -186,6 +175,17 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, tex_container);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tex_face);
+
+        double time = glfwGetTime();
+
+        // Translation
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(-0.4, 0.7, 0.0));
+        trans = glm::rotate(trans, (float) time, glm::vec3(0.0f, 0.0f, 1.0f)); // glm overloads don't like if the second argument is a double
+        trans = glm::scale(trans, glm::vec3(abs(sin(time))));
+
+        uint trans_loc = glGetUniformLocation(shader, "transform");
+        glUniformMatrix4fv(trans_loc, 1, GL_FALSE, glm::value_ptr(trans));
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
             mix += 0.01;
