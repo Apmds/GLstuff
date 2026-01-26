@@ -6,6 +6,10 @@ This part includes the subsections from "Textures" to "somewhere I'll decide whe
 #include "GLFW/glfw3.h"
 #include "utils.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -20,9 +24,9 @@ typedef unsigned int uint;
 
 float vertices[] = {
     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // X, Y, Z, R, G, B, S, T
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
-     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 2.0f,
-    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f,
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+     0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 };
 
 uint indices[] = {
@@ -156,6 +160,17 @@ int main() {
     glUseProgram(shader);
     glUniform1i(glGetUniformLocation(shader, "texture1"), 0);
     glUniform1i(glGetUniformLocation(shader, "texture2"), 1);
+
+    // Cool translation stuff
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans = glm::mat4(1.0f); // Init matrix as identity, then apply the transformations to it
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    vec = trans*vec;
+
+    int trans_loc = glGetUniformLocation(shader, "transform");
+    glUniformMatrix4fv(trans_loc, 1, GL_FALSE, glm::value_ptr(trans));
 
     // Render loop
     float mix = 0.2;

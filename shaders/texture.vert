@@ -7,8 +7,11 @@ layout (location = 2) in vec2 texCoords;
 out vec3 vertOutColor;
 out vec2 texOutCoords;
 
+uniform mat4 transform; // Transformation matrix
+
 void main() {
     vertOutColor = vertColor;
     texOutCoords = texCoords;
-    gl_Position = vec4(vertPos, 1.0);
+
+    gl_Position = transform * vec4(vertPos, 1.0);
 }

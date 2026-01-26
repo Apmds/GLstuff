@@ -57,6 +57,7 @@ target_include_directories(part2
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
         ${stb_SOURCE_DIR}
+        ${glm_SOURCE_DIR}
 )
 
 target_sources(part1
