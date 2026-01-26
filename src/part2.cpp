@@ -180,9 +180,10 @@ int main() {
 
         // Translation
         glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(-0.4, 0.7, 0.0));
+        trans = glm::translate(trans, glm::vec3(0.4, -0.7, 0.0));
         trans = glm::rotate(trans, (float) time, glm::vec3(0.0f, 0.0f, 1.0f)); // glm overloads don't like if the second argument is a double
-        trans = glm::scale(trans, glm::vec3(abs(sin(time))));
+        
+        //trans = glm::scale(trans, glm::vec3(abs(sin(time))));
 
         uint trans_loc = glGetUniformLocation(shader, "transform");
         glUniformMatrix4fv(trans_loc, 1, GL_FALSE, glm::value_ptr(trans));
@@ -198,6 +199,14 @@ int main() {
 
         
         glUniform1f(glGetUniformLocation(shader, "mixValue"), mix);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+
+
+        trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(-1.0, 1.0, 0.0));
+        trans = glm::scale(trans, glm::vec3(sin(time + 2)));
+        glUniformMatrix4fv(trans_loc, 1, GL_FALSE, glm::value_ptr(trans));
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
