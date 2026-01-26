@@ -1,6 +1,16 @@
-cmake_minimum_required(VERSION 3.4...3.28 FATAL_ERROR) # Para ser igual ao do GLFW
+cmake_minimum_required(VERSION 3.11...3.28 FATAL_ERROR) # Para ser igual ao do GLFW
 
-project(LearnOpenGL C)
+project(LearnOpenGL)
+
+# GLM
+include(FetchContent)
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG 	0af55ccecd98d4e5a8d1fad7de25ba429d60e863 #refs/tags/1.0.1
+)
+FetchContent_MakeAvailable(glm)
+
 
 # Fetch stb_image.h
 include(FetchContent)
@@ -56,7 +66,7 @@ target_sources(part1
 )
 target_sources(part2
     PRIVATE
-        src/part2.c
+        src/part2.cpp
         src/utils.c
 )
 
@@ -82,4 +92,5 @@ target_link_libraries(part2
     PRIVATE
         glfw
         glad
+        glm::glm
 )
