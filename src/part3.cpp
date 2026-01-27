@@ -125,6 +125,18 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float))); // texCoords
     glEnableVertexAttribArray(2);
 
+    // Model matrix (local coords to world coords)
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(55.0f), glm::vec3(1.0, 0.0, 0.0));
+
+    // View matrix (world coords to camera coords)
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    // Projection matrix (camera coords to normalized range (-1 to 1))
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.1f, 100.0f);
+
+
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.2, 0.3, 0.3, 1.0);
@@ -137,6 +149,11 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, containerTex);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, faceTex);
+
+        // Send matrices to vertex shader
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 

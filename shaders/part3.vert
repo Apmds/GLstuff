@@ -6,9 +6,12 @@ layout (location = 2) in vec2 texCoords;
 
 out vec2 texOutCoords;
 
-uniform mat4 transform; // Transformation matrix
+// Matrices
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 proj;
 
 void main() {
     texOutCoords = texCoords;
-    gl_Position = vec4(vertPos, 1.0);
+    gl_Position = proj * view * model * vec4(vertPos, 1.0);
 }
