@@ -48,12 +48,19 @@ set_target_properties(glfw PROPERTIES
 # Executáveis
 add_executable(part1)
 add_executable(part2)
+add_executable(part3)
 
 target_include_directories(part1
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
 )
 target_include_directories(part2
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include/
+        ${stb_SOURCE_DIR}
+        ${glm_SOURCE_DIR}
+)
+target_include_directories(part3
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
         ${stb_SOURCE_DIR}
@@ -68,6 +75,11 @@ target_sources(part1
 target_sources(part2
     PRIVATE
         src/part2.cpp
+        src/utils.c
+)
+target_sources(part3
+    PRIVATE
+        src/part3.cpp
         src/utils.c
 )
 
@@ -90,6 +102,12 @@ target_link_libraries(part1
         glad
 )
 target_link_libraries(part2
+    PRIVATE
+        glfw
+        glad
+        glm::glm
+)
+target_link_libraries(part3
     PRIVATE
         glfw
         glad

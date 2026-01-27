@@ -1,5 +1,5 @@
 /*
-This part includes the subsections from "Textures" to "somewhere I'll decide when this gets too full" in the "Getting Started" section from learnopengl.com
+This part includes the subsections from "Textures" to "Transformations" in the "Getting Started" section from learnopengl.com
 */
 
 #include "glad/glad.h"
@@ -216,6 +216,10 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO);
 
     glfwTerminate();
     return EXIT_SUCCESS;
