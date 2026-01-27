@@ -5,7 +5,11 @@ if (( $# != 1 )); then
     exit 1
 fi
 
-mkdir -p build
-cd build
-cmake ..
+if [ ! -d build ]; then
+    mkdir -p build
+    cd build
+    cmake ..
+else
+    cd build
+fi
 make $1 && cd .. && ./build/$1
