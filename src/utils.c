@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "stb_image.h"
 
 // Helpers para carregar e compilar um shader
 static unsigned int loadShader(GLenum shader_type, const char* file_name) {
@@ -106,4 +107,47 @@ void shaderSetUint(unsigned int shader, const char* uniform, unsigned int val) {
 void shaderSetBool(unsigned int shader, const char* uniform, bool val) {
     unsigned int loc = glGetUniformLocation(shader, uniform);
     glUniform1i(loc, val);
+}
+
+
+bool createTexture(unsigned int* texp, const char* tex_file, bool gen_mipmaps, bool flipv) {
+    // Load file
+    stbi_set_flip_vertically_on_load(flipv);
+    int width, height, nrChannels;
+    unsigned char* tex_data = stbi_load(tex_file, &width, &height, &nrChannels, 0);
+    if (tex_data == NULL) {
+        fprintf(stderr, "Couldn't load image \"%s\"\n", tex_file);
+        return false;
+    }
+
+    glGenTextures(1, texp);
+
+    unsigned int tex = *texp;
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    GLenum tex_format = nrChannels == 3 ? GL_RGB : GL_RGBA;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, tex_format, GL_UNSIGNED_BYTE, tex_data);
+
+    if (gen_mipmaps) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(tex_data);
+
+    return true;
+}
+
+void textureSetFilter(unsigned int tex, GLint filterMin, GLint filterMag) {
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMag);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMin);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void textureSetWrap(unsigned int tex, GLint wrapS, GLint wrapT) {
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
