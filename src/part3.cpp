@@ -167,21 +167,46 @@ int main() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float))); // texCoords
     glEnableVertexAttribArray(2);
 
-    // Model matrix (local coords to world coords)
-    glm::mat4 model = glm::mat4(1.0f);
+    // Make opengl use the depth buffer for drawing
+    glEnable(GL_DEPTH_TEST);
+
+    float FOV = 45.0f;
+    float aspect_ratio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
 
     // View matrix (world coords to camera coords)
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
-    // Projection matrix (camera coords to normalized range (-1 to 1))
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT, 0.1f, 100.0f);
-
-    // Make opengl use the depth buffer for drawing
-    glEnable(GL_DEPTH_TEST);
-
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            FOV += 0.2;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            FOV -= 0.2;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            aspect_ratio -= 0.1;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            aspect_ratio += 0.1;
+        }
+
+        // Camera translations
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.1f));
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.1f));
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            view = glm::translate(view, glm::vec3(0.1f, 0.0f, 0.0f));
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            view = glm::translate(view, glm::vec3(-0.1f, 0.0f, 0.0f));
+        }
+
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
 
@@ -191,15 +216,23 @@ int main() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, containerTex);
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, faceTex);        
+        glBindTexture(GL_TEXTURE_2D, faceTex);
+
+        // Projection matrix (camera coords to normalized range (-1 to 1))
+        glm::mat4 proj = glm::perspective(glm::radians(FOV), aspect_ratio, 0.1f, 100.0f);
 
         // Send matrices to vertex shader
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(shader, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
         
         for (int i = 0; i < 10; i++) {
-            model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
-            model = glm::rotate(model, (float)i*20.0f, glm::vec3(0.0f, 1.0f, -0.5f));
+            // Model matrix (local coords to world coords)
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
+            float angle = i*20.0f;
+            if (i % 3 == 0) {
+                angle = (glfwGetTime() + i)*20.0f;
+            }
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, -0.5f));
             glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
