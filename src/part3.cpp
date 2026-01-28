@@ -175,10 +175,26 @@ int main() {
 
     // View matrix (world coords to camera coords)
     glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // Posição da camara em world coords
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // Onde a camara está a apontar
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // O que o mundo considera como "cima"
+
+    // Cálculo manual
+    {
+        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);               // Direção (contrária) para onde a camara aponta
+        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));            // Eixo para a direita da camara
+        glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));      // Eixo para cima da camara
+        glm::mat4 rotHelper = glm::transpose(glm::mat4(glm::vec4(cameraRight, 0), glm::vec4(cameraUp, 0), glm::vec4(cameraDirection, 0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f))); // Matriz de ajuda para a multiplicação que faz rotações
+        view = glm::translate(rotHelper, -cameraPos);
+    }
+
+    // GLM
+    view = glm::lookAt(cameraPos, cameraTarget, up);
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
+        float time = glfwGetTime();
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
             FOV += 0.2;
@@ -193,19 +209,11 @@ int main() {
             aspect_ratio += 0.1;
         }
 
-        // Camera translations
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            view = glm::translate(view, glm::vec3(0.0f, 0.0f, 0.1f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            view = glm::translate(view, glm::vec3(0.0f, 0.0f, -0.1f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            view = glm::translate(view, glm::vec3(0.1f, 0.0f, 0.0f));
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            view = glm::translate(view, glm::vec3(-0.1f, 0.0f, 0.0f));
-        }
+        // Camera circling
+        const float circleRadius = 10.0f;
+        cameraPos.x = sin(time) * circleRadius;
+        cameraPos.z = cos(time) * circleRadius;
+        view = glm::lookAt(cameraPos, cameraTarget, up);
 
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
@@ -230,7 +238,7 @@ int main() {
             glm::mat4 model = glm::translate(glm::mat4(1.0f), cubePositions[i]);
             float angle = i*20.0f;
             if (i % 3 == 0) {
-                angle = (glfwGetTime() + i)*20.0f;
+                angle = (time + i)*20.0f;
             }
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, -0.5f));
             glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
