@@ -8,7 +8,8 @@ There exist multiple parts, each one having their respective `src/partX.c` file 
 
 ## Screenshots
 
-![square](media/screenshot.png)
+![rainbow square](media/screenshot_rainbow.png)
+![3d boxes](media/screeenshot_boxes.png)
 
 ## Building
 
@@ -39,5 +40,8 @@ or
 
 Not all parts have these controls because I didn't bother to add them. Only the *quit* keybind is present in all parts.
 
-- **esc**: quit
+- **esc**: quit / unfocus mouse
 - **space**: switch between fill and wireframe modes
+- **up/down**: change texture mix
+- **mouse**: move camera
+- **WASD**: move around
