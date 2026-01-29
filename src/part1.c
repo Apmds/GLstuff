@@ -9,6 +9,10 @@ This part includes the subsections from "OpenGL" to "Shaders" in the "Getting St
 #include <stdbool.h>
 #include <math.h>
 
+// Apesar de isto não ser preciso, agora o utils usa stb_image e a definição tem que ir para algum lado
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 

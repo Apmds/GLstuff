@@ -53,6 +53,7 @@ add_executable(part3)
 target_include_directories(part1
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include/
+        ${stb_SOURCE_DIR}
 )
 target_include_directories(part2
     PRIVATE
