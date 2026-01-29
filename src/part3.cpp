@@ -28,7 +28,6 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), (float)W
 float lastmousex = 0;
 float lastmousey = 0;
 
-
 float vertices[] = {
     -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,  // X, Y, Z, R, G, B, S, T
      0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
@@ -94,12 +93,24 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 // Processes the key input for the given window
 void process_input_key(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
+        bool mouse_focus = glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+        if (mouse_focus) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        } else {
+            glfwSetWindowShouldClose(window, true);
+        }
     }
 }
 
 // Called when the mouse moves
 void mouse_movement_callback(GLFWwindow* window, double mousex, double mousey) {
+    bool mouse_focus = glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+    if (!mouse_focus) {
+        lastmousex = mousex;
+        lastmousey = mousey;
+        return;
+    }
+
     float offsetx = mousex - lastmousex;
     float offsety = -(mousey - lastmousey);
     lastmousex = mousex;
@@ -130,6 +141,13 @@ void mouse_scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
     }
 }
 
+// Called when the mouse is clicked
+void mouse_click_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+}
+
 // Called every frame to handle inputs
 void handle_input(GLFWwindow* window, float deltatime);
 
@@ -150,7 +168,6 @@ int main() {
         return EXIT_FAILURE;
     }
     glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         fprintf(stderr, "GLAD did NOT load OpenGL functions\n");
@@ -163,6 +180,7 @@ int main() {
     glfwSetKeyCallback(window, process_input_key);
     glfwSetCursorPosCallback(window, mouse_movement_callback);
     glfwSetScrollCallback(window, mouse_scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_click_callback);
 
     // Load textures
     uint containerTex;
