@@ -5,6 +5,7 @@ This part includes the subsections from "Coordinate Systems" to "Review" in the 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "utils.h"
+#include "camera.hpp"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -22,14 +23,7 @@ typedef unsigned int uint;
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-// Coisas de camara
-float aspect_ratio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
-float FOV = 45.0f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // Posição da camara em world coords
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // Vetor que representa para onde a camara aponta
-glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // O que o mundo considera como "cima"
-float yaw = -90.0f;
-float pitch = 0.0f;
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT);
 
 float lastmousex = 0;
 float lastmousey = 0;
@@ -112,29 +106,27 @@ void mouse_movement_callback(GLFWwindow* window, double mousex, double mousey) {
     lastmousey = mousey;
 
     float cameraSens = 0.1f;
-    yaw += offsetx * cameraSens;
-    pitch += offsety * cameraSens;
+    camera.yaw += offsetx * cameraSens;
+    camera.pitch += offsety * cameraSens;
 
-    if(pitch > 89.0f)
-    pitch =  89.0f;
-    if(pitch < -89.0f)
-    pitch = -89.0f;
+    if(camera.pitch > 89.0f) {
+        camera.pitch =  89.0f;
+    }
+    if(camera.pitch < -89.0f) {
+        camera.pitch = -89.0f;
+    }
 
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    camera.update();
 }
 
 // Called when the mouse scrolls
 void mouse_scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
-    FOV += -scrolly;
-    if (FOV < 1) {
-        FOV = 1;
+    camera.FOV += -scrolly;
+    if (camera.FOV < 1) {
+        camera.FOV = 1;
     }
-    if (FOV > 120) {
-        FOV = 120;
+    if (camera.FOV > 120) {
+        camera.FOV = 120;
     }
 }
 
@@ -222,43 +214,23 @@ int main() {
 
     // Make opengl use the depth buffer for drawing
     glEnable(GL_DEPTH_TEST);
-
-    // View matrix (world coords to camera coords)
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
-
-    // Coisas básicas de camara
-    /* 
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // Posição da camara em world coords
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // Onde a camara está a apontar
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // O que o mundo considera como "cima"
-
-    // Cálculo manual
-    {
-        glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);               // Direção (contrária) para onde a camara aponta
-        glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));            // Eixo para a direita da camara
-        glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));      // Eixo para cima da camara
-        glm::mat4 rotHelper = glm::transpose(glm::mat4(glm::vec4(cameraRight, 0), glm::vec4(cameraUp, 0), glm::vec4(cameraDirection, 0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f))); // Matriz de ajuda para a multiplicação que faz rotações
-        view = glm::translate(rotHelper, -cameraPos);
-    }
-    // Com GLM
-    view = glm::lookAt(cameraPos, cameraTarget, up);
-    */
-   float lasttime = glfwGetTime();
-   float deltatime = glfwGetTime() - lasttime;
-
+    
+    float lasttime = glfwGetTime();
+    float deltatime = glfwGetTime() - lasttime;
+    
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         float time = glfwGetTime();
         deltatime = time - lasttime;
         lasttime = time;
-
+        
         handle_input(window, deltatime);
-
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
+        
+        // View matrix (world coords to camera coords)
+        glm::mat4 view = camera.getView();
 
         // Projection matrix (camera coords to normalized range (-1 to 1))
-        glm::mat4 proj = glm::perspective(glm::radians(FOV), aspect_ratio, 0.1f, 100.0f);
+        glm::mat4 proj = camera.getProj();
 
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
@@ -309,24 +281,17 @@ int main() {
 
 
 void handle_input(GLFWwindow* window, float deltatime) {
-    //if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-    //    aspect_ratio -= 0.1;
-    //}
-    //if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-    //    aspect_ratio += 0.1;
-    //}
-
     float speed = 5.0f * deltatime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraPos += speed * cameraFront;
+        camera.moveFront(speed);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraPos -= speed * cameraFront;
+        camera.moveBack(speed);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraPos += speed * glm::normalize(glm::cross(up, cameraFront));
+        camera.moveLeft(speed);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraPos -= speed * glm::normalize(glm::cross(up, cameraFront));
+        camera.moveRight(speed);
     }
 }

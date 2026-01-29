@@ -80,6 +80,7 @@ target_sources(part2
 target_sources(part3
     PRIVATE
         src/part3.cpp
+        src/camera.cpp
         src/utils.c
 )
 
