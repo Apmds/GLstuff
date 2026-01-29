@@ -22,6 +22,19 @@ typedef unsigned int uint;
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+// Coisas de camara
+float aspect_ratio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
+float FOV = 45.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // Posição da camara em world coords
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // Vetor que representa para onde a camara aponta
+glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // O que o mundo considera como "cima"
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+float lastmousex = 0;
+float lastmousey = 0;
+
+
 float vertices[] = {
     -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,  // X, Y, Z, R, G, B, S, T
      0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
@@ -91,6 +104,43 @@ void process_input_key(GLFWwindow* window, int key, int scancode, int action, in
     }
 }
 
+// Called when the mouse moves
+void mouse_movement_callback(GLFWwindow* window, double mousex, double mousey) {
+    float offsetx = mousex - lastmousex;
+    float offsety = -(mousey - lastmousey);
+    lastmousex = mousex;
+    lastmousey = mousey;
+
+    float cameraSens = 0.1f;
+    yaw += offsetx * cameraSens;
+    pitch += offsety * cameraSens;
+
+    if(pitch > 89.0f)
+    pitch =  89.0f;
+    if(pitch < -89.0f)
+    pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+}
+
+// Called when the mouse scrolls
+void mouse_scroll_callback(GLFWwindow* window, double scrollx, double scrolly) {
+    FOV += -scrolly;
+    if (FOV < 1) {
+        FOV = 1;
+    }
+    if (FOV > 120) {
+        FOV = 120;
+    }
+}
+
+// Called every frame to handle inputs
+void handle_input(GLFWwindow* window, float deltatime);
+
 int main() {
     // Boring setup
     glfwInit();
@@ -98,7 +148,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+    
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL - Part 3", NULL, NULL);
     if (window == NULL) {
         const char* errorMsg;
@@ -108,16 +158,19 @@ int main() {
         return EXIT_FAILURE;
     }
     glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         fprintf(stderr, "GLAD did NOT load OpenGL functions\n");
         glfwTerminate();
         return EXIT_FAILURE;
     }
-
+    
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, process_input_key);
+    glfwSetCursorPosCallback(window, mouse_movement_callback);
+    glfwSetScrollCallback(window, mouse_scroll_callback);
 
     // Load textures
     uint containerTex;
@@ -170,12 +223,12 @@ int main() {
     // Make opengl use the depth buffer for drawing
     glEnable(GL_DEPTH_TEST);
 
-    float FOV = 45.0f;
-    float aspect_ratio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
-
     // View matrix (world coords to camera coords)
     glm::mat4 view = glm::mat4(1.0f);
+    view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
 
+    // Coisas básicas de camara
+    /* 
     glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); // Posição da camara em world coords
     glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f); // Onde a camara está a apontar
     glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // O que o mundo considera como "cima"
@@ -188,32 +241,24 @@ int main() {
         glm::mat4 rotHelper = glm::transpose(glm::mat4(glm::vec4(cameraRight, 0), glm::vec4(cameraUp, 0), glm::vec4(cameraDirection, 0), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f))); // Matriz de ajuda para a multiplicação que faz rotações
         view = glm::translate(rotHelper, -cameraPos);
     }
-
-    // GLM
+    // Com GLM
     view = glm::lookAt(cameraPos, cameraTarget, up);
+    */
+   float lasttime = glfwGetTime();
+   float deltatime = glfwGetTime() - lasttime;
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
         float time = glfwGetTime();
+        deltatime = time - lasttime;
+        lasttime = time;
 
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            FOV += 0.2;
-        }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            FOV -= 0.2;
-        }
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            aspect_ratio -= 0.1;
-        }
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            aspect_ratio += 0.1;
-        }
+        handle_input(window, deltatime);
 
-        // Camera circling
-        const float circleRadius = 10.0f;
-        cameraPos.x = sin(time) * circleRadius;
-        cameraPos.z = cos(time) * circleRadius;
-        view = glm::lookAt(cameraPos, cameraTarget, up);
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
+
+        // Projection matrix (camera coords to normalized range (-1 to 1))
+        glm::mat4 proj = glm::perspective(glm::radians(FOV), aspect_ratio, 0.1f, 100.0f);
 
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Also clear depth buffer
@@ -225,9 +270,6 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, containerTex);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, faceTex);
-
-        // Projection matrix (camera coords to normalized range (-1 to 1))
-        glm::mat4 proj = glm::perspective(glm::radians(FOV), aspect_ratio, 0.1f, 100.0f);
 
         // Send matrices to vertex shader
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -263,4 +305,28 @@ int main() {
 
     glfwTerminate();
     return EXIT_SUCCESS;
+}
+
+
+void handle_input(GLFWwindow* window, float deltatime) {
+    //if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    //    aspect_ratio -= 0.1;
+    //}
+    //if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    //    aspect_ratio += 0.1;
+    //}
+
+    float speed = 5.0f * deltatime;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraPos += speed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraPos -= speed * cameraFront;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cameraPos += speed * glm::normalize(glm::cross(up, cameraFront));
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cameraPos -= speed * glm::normalize(glm::cross(up, cameraFront));
+    }
 }
